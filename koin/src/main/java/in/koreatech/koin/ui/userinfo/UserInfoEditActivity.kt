@@ -1,28 +1,45 @@
 package `in`.koreatech.koin.ui.userinfo
 
+import android.os.Bundle
+import androidx.activity.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import dagger.hilt.android.AndroidEntryPoint
 import `in`.koreatech.koin.R
+import `in`.koreatech.koin.core.activity.ActivityBase
+import `in`.koreatech.koin.core.analytics.EventAction
+import `in`.koreatech.koin.core.analytics.EventExtra
+import `in`.koreatech.koin.core.analytics.EventLogger
 import `in`.koreatech.koin.core.toast.ToastUtil
 import `in`.koreatech.koin.core.util.dataBinding
 import `in`.koreatech.koin.core.util.setAppBarButtonClickedListener
 import `in`.koreatech.koin.databinding.ActivityUserInfoEditedBinding
 import `in`.koreatech.koin.domain.model.user.Gender
-import `in`.koreatech.koin.ui.navigation.KoinNavigationDrawerActivity
-import `in`.koreatech.koin.ui.navigation.state.MenuState
-import `in`.koreatech.koin.ui.userinfo.contract.UserInfoEditContract
-import `in`.koreatech.koin.ui.userinfo.viewmodel.UserInfoEditViewModel
-import `in`.koreatech.koin.util.ext.*
-import android.os.Bundle
-import androidx.activity.viewModels
-import androidx.core.widget.addTextChangedListener
-import dagger.hilt.android.AndroidEntryPoint
 import `in`.koreatech.koin.domain.model.user.User
+import `in`.koreatech.koin.ui.userinfo.contract.UserInfoEditContract
+import `in`.koreatech.koin.ui.userinfo.state.NicknameCheckState
+import `in`.koreatech.koin.ui.userinfo.viewmodel.UserInfoEditViewModel
+import `in`.koreatech.koin.util.DebounceTextWatcher
+import `in`.koreatech.koin.util.SnackbarUtil
+import `in`.koreatech.koin.util.ext.observeLiveData
+import `in`.koreatech.koin.util.ext.textString
+import `in`.koreatech.koin.util.ext.withLoading
+import kotlinx.coroutines.launch
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 @AndroidEntryPoint
-class UserInfoEditActivity : KoinNavigationDrawerActivity() {
-    override val menuState: MenuState = MenuState.UserInfo
-
+class UserInfoEditActivity : ActivityBase() {
     private val binding by dataBinding<ActivityUserInfoEditedBinding>(R.layout.activity_user_info_edited)
+    override val screenTitle = "내 정보 수정"
     private val userInfoEditViewModel by viewModels<UserInfoEditViewModel>()
+
+    private val nicknameWatcher by lazy {
+        DebounceTextWatcher(lifecycleScope, 0L) {
+            userInfoEditViewModel.onNickNameChanged(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,120 +51,76 @@ class UserInfoEditActivity : KoinNavigationDrawerActivity() {
         userInfoEditViewModel.getUserInfo()
     }
 
-    private fun initView() = with(binding) {
-        koinBaseAppBar.setAppBarButtonClickedListener(
-            leftButtonClicked = {
-                onBackPressed()
-            },
-            rightButtonClicked = {
+    private fun initView() =
+        with(binding) {
+            appbarUserInfoEdit.setAppBarButtonClickedListener(
+                leftButtonClicked = {
+                    onBackPressedDispatcher.onBackPressed()
+                },
+                rightButtonClicked = {},
+            )
+
+            etNickname.addTextChangedListener(nicknameWatcher)
+            spinnerMajor.lifecycleOwner = this@UserInfoEditActivity
+
+            btnConfirm.setOnClickListener {
                 userInfoEditViewModel.updateUserInfo(
-                    name = binding.userinfoeditedEdittextName.textString,
-                    nickname = binding.userinfoeditedEdittextNickName.textString,
-                    separatedPhoneNumber = arrayOf(
-                        binding.userinfoeditedEdittextPhoneNum1,
-                        binding.userinfoeditedEdittextPhoneNum2,
-                        binding.userinfoeditedEdittextPhoneNum3
-                    ).map { it.textString },
-                    gender = when {
-                        binding.userinfoeditedRadiobuttonGenderMan.isChecked -> Gender.Man
-                        binding.userinfoeditedRadiobuttonGenderWoman.isChecked -> Gender.Woman
-                        else -> null
-                    },
-                    studentId = binding.userinfoeditedEdittextStudentId.textString
+                    name = etName.text.toString(),
+                    nickname = etNickname.text.toString(),
+                    rawPhoneNumber = etPhoneNumber.text.toString(),
+                    gender =
+                        if (rbGenderMan.isChecked) {
+                            Gender.Man
+                        } else if (rbGenderWoman.isChecked) {
+                            Gender.Woman
+                        } else {
+                            Gender.Unknown
+                        },
+                    studentId = etStudentId.text.toString(),
+                    major = spinnerMajor.text.toString(),
                 )
             }
-        )
 
-        userinfoeditedEdittextName.addTextChangedListener {
-            userInfoEditViewModel
+            btnNicknameDuplication.setOnClickListener {
+                userInfoEditViewModel.checkNickname(etNickname.textString)
+            }
+            invalidateNickNameViews(false)
         }
-
-        userinfoeditedEdittextStudentId.addTextChangedListener {
-            userInfoEditViewModel.getDept(it.toString())
-        }
-
-        userinfoeditedButtonNicknameCheck.setOnClickListener {
-            userInfoEditViewModel.checkNickname(userinfoeditedEdittextNickName.textString)
-        }
-    }
 
     private fun initViewModel() {
         with(userInfoEditViewModel) {
             withLoading(this@UserInfoEditActivity, this)
 
             observeLiveData(user) { user ->
-                when(user) {
+                when (user) {
                     User.Anonymous -> {
                         ToastUtil.getInstance().makeShort(getString(R.string.user_info_anonymous))
                         finish()
                     }
+
                     is User.Student ->
                         with(binding) {
-                            userinfoeditedTextviewId.text = user.email
-                            userinfoeditedTextviewAnonymousNickName.text = user.anonymousNickname
-
-                            userinfoeditedEdittextName.apply {
-                                setText(user.name)
-
-                                if (user.name.isNullOrEmpty()) {
-                                    isEnabled = true
-                                    setDefaultBackground()
-                                } else {
-                                    isEnabled = false
-                                    setTransparentBackground()
-                                }
-                            }
-
-                            userinfoeditedEdittextNickName.setText(user.nickname)
-
-                            if (user.phoneNumber.isNullOrEmpty()) {
-                                userinfoeditedEdittextPhoneNum1.setText("")
-                                userinfoeditedEdittextPhoneNum2.setText("")
-                                userinfoeditedEdittextPhoneNum3.setText("")
-                            } else {
-                                val (first, middle, end) = user.phoneNumber!!.splitPhoneNumber()
-                                userinfoeditedEdittextPhoneNum1.setText(first)
-                                userinfoeditedEdittextPhoneNum2.setText(middle)
-                                userinfoeditedEdittextPhoneNum3.setText(end)
-                            }
-
+                            tvId.text = user.email
+                            etName.setText(user.name)
+                            etNickname.setText(user.nickname)
+                            etPhoneNumber.setText(user.phoneNumber)
+                            etStudentId.setText(user.studentNumber)
                             when (user.gender) {
-                                Gender.Man -> userinfoeditedRadiobuttonGenderMan.isChecked = true
-                                Gender.Woman -> userinfoeditedRadiobuttonGenderWoman.isChecked = true
-                                else -> {
-                                    userinfoeditedRadiobuttonGenderMan.isChecked = false
-                                    userinfoeditedRadiobuttonGenderWoman.isChecked = false
+                                is Gender.Man -> {
+                                    binding.rbGenderMan.isChecked = true
                                 }
-                            }
 
-                            userinfoeditedEdittextStudentId.apply {
-                                setText(user.studentNumber)
-                                if (user.studentNumber == null || user.studentNumber?.isEmpty() == false) {
-                                    isEnabled = true
-                                    setDefaultBackground()
-                                    userinfoeditedEdittextMajor.setText("")
-                                } else {
-                                    isEnabled = false
-                                    setTransparentBackground()
-                                    userInfoEditViewModel.getDept(user.studentNumber!!)
+                                is Gender.Woman -> {
+                                    binding.rbGenderWoman.isChecked = true
                                 }
-                            }
 
-                            userinfoeditedEdittextMajor.apply {
-                                isEnabled = false
-                                hint = context.getString(R.string.user_info_id_hint)
+                                is Gender.Unknown -> {
+                                    binding.rbGenderMan.isChecked = false
+                                    binding.rbGenderWoman.isChecked = false
+                                }
                             }
                         }
                 }
-            }
-
-            observeLiveData(dept) {
-                binding.userinfoeditedEdittextMajor.setText(it)
-                binding.userinfoeditedEdittextMajorError.text = ""
-            }
-
-            observeLiveData(getDeptErrorMessage) {
-                binding.userinfoeditedEdittextMajorError.text = it
             }
 
             observeLiveData(toastErrorMessage) {
@@ -155,15 +128,80 @@ class UserInfoEditActivity : KoinNavigationDrawerActivity() {
             }
 
             observeLiveData(nicknameDuplicatedEvent) {
-                if (it) ToastUtil.getInstance().makeShort(R.string.error_nickname_duplicated)
-                else ToastUtil.getInstance().makeShort(R.string.nickname_available)
+                when (it) {
+                    NicknameCheckState.NEED_CHECK -> {
+                        invalidateNickNameViews(true)
+                    }
+
+                    NicknameCheckState.POSSIBLE -> {
+                        invalidateNickNameViews(false)
+                    }
+
+                    NicknameCheckState.SAME_AS_BEFORE -> {
+                        invalidateNickNameViews(false)
+                    }
+
+                    NicknameCheckState.EXIST -> {
+                        SnackbarUtil.makeShortSnackbar(binding.root, getString(R.string.error_nickname_duplicated))
+                    }
+                }
             }
 
             observeLiveData(userInfoEditedEvent) {
+                EventLogger.logClickEvent(
+                    EventAction.USER,
+                    "header",
+                    "정보수정",
+                    EventExtra(
+                        "gender",
+                        when {
+                            binding.rbGenderMan.isChecked -> "0"
+                            binding.rbGenderWoman.isChecked -> "1"
+                            else -> "2"
+                        },
+                    ),
+                    EventExtra("department", binding.spinnerMajor.text.toString()),
+                    EventExtra("updated_at", ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX"))),
+                )
                 ToastUtil.getInstance().makeShort(getString(R.string.user_info_edited))
                 setResult(UserInfoEditContract.RESULT_USER_INFO_EDITED)
                 finish()
             }
+
+            lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    depts.collect { (depts, userMajor) ->
+                        binding.spinnerMajor.setItems(depts)
+                        with(binding.spinnerMajor) {
+                            setItems(depts)
+                            val pos = depts.indexOf(userMajor)
+                            if (pos != -1) {
+                                selectItemByIndex(pos)
+                            }
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    private fun invalidateNickNameViews(isDuplicated: Boolean) {
+        with(binding) {
+            if (isDuplicated) {
+                btnConfirm.text = getString(R.string.user_info_nickname_duplication)
+                btnConfirm.isEnabled = false
+                btnNicknameDuplication.isEnabled = true
+            } else {
+                btnConfirm.text = getString(R.string.common_save)
+                btnConfirm.isEnabled = true
+                btnNicknameDuplication.isEnabled = false
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        binding.etNickname.removeTextChangedListener(nicknameWatcher)
+
+        super.onDestroy()
     }
 }

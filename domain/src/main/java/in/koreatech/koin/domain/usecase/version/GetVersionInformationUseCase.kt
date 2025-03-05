@@ -5,38 +5,42 @@ import `in`.koreatech.koin.domain.repository.VersionRepository
 import `in`.koreatech.koin.domain.state.version.VersionUpdatePriority
 import javax.inject.Inject
 
-class GetVersionInformationUseCase @Inject constructor(
-    private val versionRepository: VersionRepository
-) {
-    suspend operator fun invoke(): Result<Version> {
-        val currentVersion = try {
-            versionRepository.getCurrentVersion()
-        } catch (t: Throwable) {
-            return Result.failure(t)
-        } ?: return Result.failure(NullPointerException("Failed to load application version: null"))
+class GetVersionInformationUseCase
+    @Inject
+    constructor(
+        private val versionRepository: VersionRepository,
+    ) {
+        suspend operator fun invoke(): Result<Version> {
+            val currentVersion =
+                try {
+                    versionRepository.getCurrentVersion()
+                } catch (t: Throwable) {
+                    return Result.failure(t)
+                } ?: return Result.failure(NullPointerException("Failed to load application version: null"))
 
-        val latestVersion = try {
-            versionRepository.getLatestVersionFromRemote()
-        } catch (t: Throwable) {
-            return Result.failure(t)
-        }
+            val version =
+                try {
+                    versionRepository.getLatestVersionFromRemote()
+                } catch (t: Throwable) {
+                    return Result.failure(t)
+                }
 
-        return kotlin.runCatching {
-            val (currentMajor, currentMinor, currentPoint) = currentVersion.split(".")
-                .map { it.toInt() }
-            val (latestMajor, latestMinor, latestPoint) = latestVersion.split(".")
-                .map { it.toInt() }
+            return runCatching {
+                val (currentMajor, currentMinor, currentPath) =
+                    currentVersion.split(".")
+                        .map { it.toInt() }
+                val (latestMajor, latestMinor, latestPath) =
+                    version.latestVersion.split(".")
+                        .map { it.toInt() }
 
-            when {
-                currentMajor < latestMajor ->
-                    Version(currentVersion, latestVersion, VersionUpdatePriority.High)
-                currentMajor == latestMajor && currentMinor < latestMinor ->
-                    Version(currentVersion, latestVersion, VersionUpdatePriority.Medium)
-                currentMajor == latestMajor && currentMinor == latestMinor && currentPoint < latestPoint ->
-                    Version(currentVersion, latestVersion, VersionUpdatePriority.Low)
-                else ->
-                    Version(currentVersion, latestVersion, VersionUpdatePriority.None)
+                when {
+                    currentMajor < latestMajor ||
+                        currentMajor == latestMajor && currentMinor < latestMinor ||
+                        currentMajor == latestMajor && currentMinor == latestMinor && currentPath < latestPath ->
+                        Version(currentVersion, version.latestVersion, version.title, version.content, VersionUpdatePriority.Importance)
+                    else ->
+                        Version(currentVersion, version.latestVersion, version.title, version.content, VersionUpdatePriority.None)
+                }
             }
         }
     }
-}

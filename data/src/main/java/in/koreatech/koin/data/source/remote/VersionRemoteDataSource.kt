@@ -4,10 +4,16 @@ import `in`.koreatech.koin.data.api.VersionApi
 import `in`.koreatech.koin.data.response.VersionResponse
 import javax.inject.Inject
 
-class VersionRemoteDataSource @Inject constructor(
-    private val versionApi: VersionApi
-) {
-    suspend fun getAndroidAppVersion(): VersionResponse {
-        return versionApi.getVersion("android")
+class VersionRemoteDataSource
+    @Inject
+    constructor(
+        private val versionApi: VersionApi,
+    ) {
+        suspend fun getAndroidAppVersion(): VersionResponse {
+            return versionApi.getVersion("android")
+        }
+
+        suspend fun getOwnerAppVersion(): VersionResponse {
+            return versionApi.getVersion("android_owner")
+        }
     }
-}

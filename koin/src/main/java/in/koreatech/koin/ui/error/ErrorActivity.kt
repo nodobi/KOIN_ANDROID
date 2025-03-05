@@ -1,20 +1,11 @@
 package `in`.koreatech.koin.ui.error
 
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
-import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
-import androidx.core.content.ContextCompat
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
-import butterknife.BindView
-import butterknife.OnClick
 import `in`.koreatech.koin.BuildConfig
 import `in`.koreatech.koin.R
 import `in`.koreatech.koin.core.activity.ActivityBase
@@ -26,6 +17,16 @@ import `in`.koreatech.koin.util.ext.goToKakaoTalkBcsdlabFriend
 
 class ErrorActivity : ActivityBase() {
     private val binding by dataBinding<ActivityErrorBinding>(R.layout.activity_error)
+    override val screenTitle: String = "에러"
+
+    override var onBackPressedCallback =
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                onBackPressedDispatcher.onBackPressed()
+                val goToHomeIntent = Intent(this@ErrorActivity, SplashActivity::class.java)
+                startActivity(goToHomeIntent)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,12 +61,6 @@ class ErrorActivity : ActivityBase() {
     override fun onPause() {
         super.onPause()
         finish()
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        val goToHomeIntent = Intent(this, SplashActivity::class.java)
-        startActivity(goToHomeIntent)
     }
 
     private fun onClickKakaoTalk() {

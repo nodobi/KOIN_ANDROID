@@ -1,10 +1,17 @@
 package `in`.koreatech.koin.common
 
-sealed class UiStatus {
-    object Init: UiStatus()
-    object Loading: UiStatus()
-    object Success: UiStatus()
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
+sealed class UiStatus : Parcelable {
+    object Init : UiStatus()
+
+    object Loading : UiStatus()
+
+    object Success : UiStatus()
+
     data class Failed(
-        val message: String = ""
-    ): UiStatus()
+        val message: String = "",
+    ) : UiStatus()
 }

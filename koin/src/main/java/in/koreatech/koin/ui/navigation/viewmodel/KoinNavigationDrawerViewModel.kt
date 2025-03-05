@@ -1,54 +1,81 @@
 package `in`.koreatech.koin.ui.navigation.viewmodel
 
-import `in`.koreatech.koin.core.viewmodel.BaseViewModel
-import `in`.koreatech.koin.core.viewmodel.SingleLiveEvent
-import `in`.koreatech.koin.domain.usecase.user.GetUserInfoUseCase
-import `in`.koreatech.koin.ui.navigation.state.MenuState
-import `in`.koreatech.koin.ui.navigation.state.UserState
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import `in`.koreatech.koin.core.viewmodel.BaseViewModel
+import `in`.koreatech.koin.core.viewmodel.SingleLiveEvent
 import `in`.koreatech.koin.domain.model.user.User
+import `in`.koreatech.koin.domain.usecase.chat.GetChatListUseCase
+import `in`.koreatech.koin.domain.usecase.user.GetUserStatusUseCase
+import `in`.koreatech.koin.domain.usecase.user.UpdateDeviceTokenUseCase
+import `in`.koreatech.koin.domain.usecase.user.UserLogoutUseCase
 import `in`.koreatech.koin.domain.util.onFailure
-import `in`.koreatech.koin.domain.util.onSuccess
+import `in`.koreatech.koin.ui.navigation.state.MenuState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
-class KoinNavigationDrawerViewModel @Inject constructor(
-    private val getUserInfoUseCase: GetUserInfoUseCase
-) : BaseViewModel() {
+class KoinNavigationDrawerViewModel
+    @Inject
+    constructor(
+        private val updateDeviceTokenUseCase: UpdateDeviceTokenUseCase,
+        private val userLogoutUseCase: UserLogoutUseCase,
+        private val getUserStatusUseCase: GetUserStatusUseCase,
+        private val getChatListUseCase: GetChatListUseCase,
+    ) : BaseViewModel() {
+        private val _menuEvent = SingleLiveEvent<MenuState>()
+        val menuEvent: LiveData<MenuState> get() = _menuEvent
 
-    private val _userState = MutableLiveData<User>()
-    val userState: LiveData<User> get() = _userState
+        val userInfoFlow: StateFlow<User> =
+            getUserStatusUseCase()
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), User.Anonymous)
 
-    private val _getUserInfoErrorMessage = SingleLiveEvent<String>()
-    val getUserInfoErrorMessage: LiveData<String> get() = _getUserInfoErrorMessage
+        private val _unReadMessageCount = MutableStateFlow(0)
+        val unReadMessageCount: StateFlow<Int> = _unReadMessageCount.asStateFlow()
 
-    private val _selectedMenu = MutableLiveData<MenuState>(MenuState.Main)
-    val selectedMenu: LiveData<MenuState> get() = _selectedMenu
-
-    private val _menuEvent = SingleLiveEvent<MenuState>()
-    val menuEvent: LiveData<MenuState> get() = _menuEvent
-
-    fun getUser() {
-        viewModelScope.launch {
-            getUserInfoUseCase()
-                .onSuccess {
-                    _userState.value = it
-                }.onFailure {
-                    _getUserInfoErrorMessage.value = it.message
-                }
+        fun selectMenu(menuState: MenuState) {
+            _menuEvent.value = menuState
         }
-    }
 
-    fun initMenu(menuState: MenuState) {
-        _selectedMenu.value = menuState
-    }
+        fun updateDeviceToken() {
+            viewModelScope.launch {
+                try {
+                    updateDeviceTokenUseCase()
+                } catch (e: Exception) {
+                    Timber.e("Failed Update Fcm Token : ${e.message}")
+                }
+            }
+        }
 
-    fun selectMenu(menuState: MenuState) {
-        _selectedMenu.value = menuState
-        _menuEvent.value = menuState
+        fun getUnreadMessageCount() =
+            viewModelScope.launch {
+                if (userInfoFlow.value == User.Anonymous) return@launch
+                var tempUnReadMessageCount = 0
+                getChatListUseCase().collectLatest { messages ->
+                    messages.forEach { message ->
+                        tempUnReadMessageCount += message.unReadMessageCount
+                    }
+                }
+
+                if (tempUnReadMessageCount == _unReadMessageCount.value) {
+                    return@launch
+                } else {
+                    _unReadMessageCount.value = tempUnReadMessageCount
+                }
+            }
+
+        fun logout() =
+            viewModelScope.launch {
+                userLogoutUseCase().onFailure {
+                    _errorToast.value = it.message
+                }
+            }
     }
-}

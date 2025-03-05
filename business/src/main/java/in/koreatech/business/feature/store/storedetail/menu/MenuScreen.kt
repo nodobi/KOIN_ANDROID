@@ -1,0 +1,86 @@
+package `in`.koreatech.business.feature.store.storedetail.menu
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import `in`.koreatech.business.R
+import `in`.koreatech.business.feature.store.storedetail.MyStoreDetailState
+
+@Composable
+fun MenuScreen(
+    verticalOffset: Boolean,
+    currentPage: Int,
+    state: MyStoreDetailState,
+    onMenuItemClicked: (Int) -> Unit = {},
+) {
+    val scrollState = rememberScrollState()
+    val enabledScroll by remember(
+        verticalOffset,
+        scrollState.value,
+    ) { derivedStateOf { verticalOffset || scrollState.value != 0 } }
+    val categories =
+        listOf(
+            stringResource(R.string.recommend_menu),
+            stringResource(R.string.main_menu),
+            stringResource(R.string.set_menu),
+            stringResource(R.string.side_menu),
+        )
+    LaunchedEffect(scrollState.value) {
+        if (scrollState.value != 0 && currentPage != 0) {
+            scrollState.scrollTo(0)
+        }
+    }
+    /*LazyRow(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 9.dp)
+            .fillMaxWidth()
+            .height(40.dp), verticalAlignment = Alignment.CenterVertically
+    ) {
+        items(categories.size) {
+            Box(
+                modifier = Modifier
+                    .fillParentMaxWidth(0.25f)
+                    .height(40.dp)
+                    .padding(end = 10.dp)
+                    .border(
+                        width = 1.dp, color = Gray3, shape = RoundedCornerShape(4.dp)
+                    ), contentAlignment = Alignment.Center
+
+            ) {
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = categories[it],
+                    fontSize = 12.sp,
+                    style = TextStyle(color = Gray6, fontSize = 13.sp),
+                    fontWeight = FontWeight(500),
+                )
+            }
+        }
+    }*/
+    LazyColumn(
+        modifier =
+            Modifier
+                .fillMaxSize(),
+        userScrollEnabled = enabledScroll,
+    ) {
+        state.storeMenu?.let {
+            items(state.storeMenu) {
+                MenuCategories(it)
+                MenuItem(
+                    menuList = it,
+                    onMenuClicked = { menuId ->
+                        onMenuItemClicked(menuId)
+                    },
+                )
+            }
+        }
+    }
+}

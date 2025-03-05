@@ -3,8 +3,8 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
@@ -22,5 +22,34 @@ gradlePlugin {
             id = "in.koreatech.plugin.compose"
             implementationClass = "AndroidApplicationComposeConventionPlugin"
         }
+        register("AndroidApplicationHiltPlugin"){
+            id = "in.koreatech.plugin.hilt"
+            implementationClass = "AndroidApplicationHiltConventionPlugin"
+        }
+        register("AndroidApplicationOrbitPlugin"){
+            id = "in.koreatech.plugin.orbit"
+            implementationClass = "AndroidApplicationOrbitConventionPlugin"
+        }
+        register("AndroidLibraryOrbitPlugin"){
+            id = "in.koreatech.plugin.library.orbit"
+            implementationClass = "AndroidLibraryOrbitConventionPlugin"
+        }
+        register("AndroidLibraryPlugin") {
+            id = "in.koreatech.plugin.library"
+            implementationClass = "AndroidLibraryConventionPlugin"
+        }
+        register("FirebasePlugin") {
+            id = "in.koreatech.plugin.firebase"
+            implementationClass = "FirebaseConventionPlugin"
+        }
+        register("JavaLibraryPlugin") {
+            id = "in.koreatech.plugin.java"
+            implementationClass = "JavaLibraryConventionPlugin"
+        }
+        register("OssLicensePlugin") {
+            id = "in.koreatech.plugin.oss"
+            implementationClass = "OssLicensePlugin"
+        }
+
     }
 }

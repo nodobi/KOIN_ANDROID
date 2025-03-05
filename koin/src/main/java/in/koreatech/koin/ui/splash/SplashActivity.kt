@@ -1,116 +1,213 @@
 package `in`.koreatech.koin.ui.splash
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.util.Log
+import androidx.activity.viewModels
+import androidx.core.os.bundleOf
+import androidx.lifecycle.lifecycleScope
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
+import dagger.hilt.android.AndroidEntryPoint
+import `in`.koreatech.koin.BuildConfig
 import `in`.koreatech.koin.R
-import `in`.koreatech.koin.contract.LoginContract
 import `in`.koreatech.koin.core.activity.ActivityBase
-import `in`.koreatech.koin.core.network.RetrofitManager
+import `in`.koreatech.koin.core.navigation.Navigator
+import `in`.koreatech.koin.core.navigation.NavigatorType
+import `in`.koreatech.koin.core.navigation.utils.EXTRA_ARTICLE_ID
+import `in`.koreatech.koin.core.navigation.utils.EXTRA_BOARD_ID
+import `in`.koreatech.koin.core.navigation.utils.EXTRA_CHAT_ROOM_ID
+import `in`.koreatech.koin.core.navigation.utils.EXTRA_ID
+import `in`.koreatech.koin.core.navigation.utils.EXTRA_NAV_TYPE
+import `in`.koreatech.koin.core.navigation.utils.EXTRA_TYPE
 import `in`.koreatech.koin.core.toast.ToastUtil
-import `in`.koreatech.koin.data.sharedpreference.UserInfoSharedPreferencesHelper
+import `in`.koreatech.koin.core.util.SystemBarsUtils
 import `in`.koreatech.koin.domain.state.version.VersionUpdatePriority
+import `in`.koreatech.koin.ui.article.ArticleActivity
+import `in`.koreatech.koin.ui.forceupdate.ForceUpdateActivity
 import `in`.koreatech.koin.ui.main.activity.MainActivity
-import `in`.koreatech.koin.ui.splash.state.TokenState
 import `in`.koreatech.koin.ui.splash.viewmodel.SplashViewModel
 import `in`.koreatech.koin.util.FirebasePerformanceUtil
 import `in`.koreatech.koin.util.ext.observeLiveData
-import android.content.Intent
-import android.os.Bundle
-import android.util.Log
-import android.widget.Button
-import androidx.activity.viewModels
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SplashActivity : ActivityBase() {
+    companion object {
+        private const val screenTitle = "스플래시"
+        private const val koinStart = "koin_start"
+        const val version = "version"
+        const val title = "title"
+        const val content = "content"
+    }
+
+    @Inject
+    lateinit var navigator: Navigator
+
+    override val screenTitle = SplashActivity.screenTitle
 
     private val firebasePerformanceUtil by lazy {
-        FirebasePerformanceUtil("koin_start")
+        FirebasePerformanceUtil(koinStart)
     }
 
     private val splashViewModel by viewModels<SplashViewModel>()
     private val createdTime = System.currentTimeMillis()
 
-    private val loginActivityLauncher = registerForActivityResult(LoginContract()) {}
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
-        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-            controller.hide(WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        }
 
-        firebasePerformanceUtil.start()
-        RetrofitManager.getInstance().init()
-        UserInfoSharedPreferencesHelper.getInstance().init(applicationContext)
-
-        initViewModel()
+        initView()
+        initObserve()
+        checkInAppUpdate()
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
+    private fun initView() {
         splashViewModel.checkUpdate()
+        firebasePerformanceUtil.start()
+        SystemBarsUtils(this).apply {
+            setImmersiveMode(window)
+        }
     }
 
-    private fun initViewModel() = with(splashViewModel) {
-        observeLiveData(version) { (currentVersion, latestVersion, versionUpdatePriority) ->
-            when (versionUpdatePriority) {
-                VersionUpdatePriority.High, VersionUpdatePriority.Medium -> {
-                    createVersionUpdateDialog(
-                        currentVersion,
-                        latestVersion,
-                        versionUpdatePriority
-                    )
-                }
+    private fun initObserve() =
+        with(splashViewModel) {
+            observeLiveData(version) { version ->
+                when (version.versionUpdatePriority) {
+                    VersionUpdatePriority.Importance ->
+                        goToForceUpdateActivity(
+                            version.title,
+                            version.content,
+                        )
 
-                else -> Unit
+                    VersionUpdatePriority.None -> Unit
+                }
+            }
+
+            observeLiveData(checkVersionError) {
+                ToastUtil.getInstance().makeShort(R.string.version_check_failed)
+            }
+
+            observeLiveData(tokenState) {
+                handleIntentOrLaunch()
             }
         }
 
-        observeLiveData(checkVersionError) {
-            ToastUtil.getInstance().makeShort(R.string.version_check_failed)
-        }
-
-        observeLiveData(tokenState) {
-            gotoMainActivityOrDelay()
+    private fun goToForceUpdateActivity(
+        title: String,
+        content: String,
+    ) {
+        lifecycleScope.launch {
+            delay()
+            Intent(this@SplashActivity, ForceUpdateActivity::class.java).apply {
+                putExtra(
+                    version,
+                    bundleOf(SplashActivity.title to title, SplashActivity.content to content),
+                )
+            }.let { intent ->
+                startActivity(intent)
+                overridePendingTransition(R.anim.slide_in, R.anim.hold)
+                finish()
+            }
         }
     }
 
-    private fun createVersionUpdateDialog(
-        currentVersion: String,
-        latestVersion: String,
-        versionUpdatePriority: VersionUpdatePriority
-    ) {
-        val dialog =
-            VersionUpdateDialog(versionUpdatePriority, currentVersion, latestVersion)
-        dialog.show(supportFragmentManager, "Dialog")
+    private fun checkInAppUpdate() {
+        val appUpdateManager = AppUpdateManagerFactory.create(this)
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
+            when (appUpdateInfo.updateAvailability()) {
+                UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS,
+                UpdateAvailability.UPDATE_AVAILABLE,
+                -> {
+                    // 업데이트가 필요한 상황이거나 업데이트 중이라면 최신 버전값 저장
+                    splashViewModel.updateLatestVersion(appUpdateInfo.availableVersionCode())
+                }
 
+                UpdateAvailability.UPDATE_NOT_AVAILABLE,
+                UpdateAvailability.UNKNOWN,
+                -> {
+                    // 업데이트 가능 유무를 모르거나, 업데이트가 불가능 한 경우 현재 버전 저장
+                    splashViewModel.updateLatestVersion(BuildConfig.VERSION_CODE)
+                }
+            }
+        }
+
+        appUpdateManager.appUpdateInfo.addOnFailureListener { e ->
+            // 업데이트 정보를 받아오는데 실패한 경우 현재 버전 저장
+            Log.e("SplashActivity", "Fail to get latest app: exception: $e")
+            splashViewModel.updateLatestVersion(BuildConfig.VERSION_CODE)
+        }
+    }
+
+    private fun handleIntentOrLaunch() {
+        val uriPrefix = intent.data?.path?.split("/")?.getOrNull(1)
+        when (uriPrefix) {
+            "articles" -> {
+                gotoArticleActivityOrDelay()
+            }
+            else -> {
+                gotoMainActivityOrDelay()
+            }
+        }
+    }
+
+    private fun gotoArticleActivityOrDelay() {
+        val path = intent.data?.path?.split("/")?.getOrNull(2)
+        lifecycleScope.launch {
+            delay()
+            val intent =
+                when (path) {
+                    "lost-item" -> {
+                        Intent(Intent.ACTION_VIEW).apply {
+                            data = Uri.parse("koin://article/activity?fragment=article_lost_and_found")
+                        }
+                    }
+                    else -> {
+                        Intent(this@SplashActivity, ArticleActivity::class.java)
+                    }
+                }
+            startActivity(intent)
+            overridePendingTransition(R.anim.fade, R.anim.hold)
+            finish()
+            firebasePerformanceUtil.stop()
+        }
     }
 
     private fun gotoMainActivityOrDelay() {
-        lifecycleScope.launch {
-            while (System.currentTimeMillis() - createdTime < 2000) yield()
+        val targetId = intent.getIntExtra(EXTRA_ID, -1)
+        val targetBoardId = intent.getIntExtra(EXTRA_BOARD_ID, -1)
+        val targetArticleId = intent.getIntExtra(EXTRA_ARTICLE_ID, -1)
+        val targetChatId = intent.getIntExtra(EXTRA_CHAT_ROOM_ID, -1)
+        val type = intent.getStringExtra(EXTRA_TYPE) ?: ""
+        val navType = intent.getStringExtra(EXTRA_NAV_TYPE) ?: ""
 
-            startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+        lifecycleScope.launch {
+            delay()
+            val intent =
+                if (navType == NavigatorType.MAIN.type) {
+                    navigator.navigateToMain(
+                        context = this@SplashActivity,
+                        targetId = Pair(EXTRA_ID, targetId),
+                        targetBoardId = Pair(EXTRA_BOARD_ID, targetBoardId),
+                        targetArticleId = Pair(EXTRA_ARTICLE_ID, targetArticleId),
+                        targetChatId = Pair(EXTRA_CHAT_ROOM_ID, targetChatId),
+                        type = Pair(EXTRA_TYPE, type),
+                    )
+                } else {
+                    Intent(this@SplashActivity, MainActivity::class.java)
+                }
+
+            startActivity(intent)
             overridePendingTransition(R.anim.fade, R.anim.hold)
             finish()
             firebasePerformanceUtil.stop()
         }
     }
 
-    private fun gotoLoginActivityOrDelay() {
-        lifecycleScope.launch {
-            while (System.currentTimeMillis() - createdTime < 2000) yield()
-
-            loginActivityLauncher.launch(Unit)
-            overridePendingTransition(R.anim.fade, R.anim.hold)
-            finish()
-            firebasePerformanceUtil.stop()
-        }
+    private suspend fun delay() {
+        while (System.currentTimeMillis() - createdTime < 2000) yield()
     }
 }

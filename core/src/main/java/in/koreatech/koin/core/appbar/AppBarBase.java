@@ -12,21 +12,18 @@ import com.google.android.material.appbar.AppBarLayout;
 import android.view.View;
 import android.widget.TextView;
 
-
 import android.util.AttributeSet;
 
-
 import in.koreatech.koin.core.R;
-
+import in.koreatech.koin.core.util.FontManager;
 
 public class AppBarBase extends AppBarLayout {
     public AppBarLayout background;
     public TextView leftButton;
     public TextView rightButton;
     public TextView title;
-    final Typeface textFont = Typeface.createFromAsset(getContext().getAssets(), "fonts/notosans_medium.ttf");
+    final Typeface textFont = FontManager.getTypeface(getContext(), FontManager.KoinFontType.PRETENDARD_MEDIUM);
     public OnClickListener onClickListener;
-
 
     public AppBarBase(Context context) {
         super(context);
@@ -51,6 +48,16 @@ public class AppBarBase extends AppBarLayout {
         background.setOnClickListener(onClickListener);
         leftButton.setOnClickListener(onClickListener);
         rightButton.setOnClickListener(onClickListener);
+        title.setOnClickListener(onClickListener);
+    }
+
+
+    public void storeDetailClickListener(OnClickListener onClickListener) {
+        if (onClickListener == null) return;
+        this.onClickListener = onClickListener;
+        background.setOnClickListener(onClickListener);
+        leftButton.setOnClickListener(onClickListener);
+        rightButton.setOnClickListener( onClickListener);
         title.setOnClickListener(onClickListener);
     }
 
@@ -107,7 +114,7 @@ public class AppBarBase extends AppBarLayout {
         leftButton.setBackground(leftButtonBackground);
         leftButton.setText(leftButtonString);
         leftButton.setVisibility(leftButtonVisibility);
-        if(leftButtonHeight!= -1 || leftButtonWidth != -1){
+        if (leftButtonHeight != -1 || leftButtonWidth != -1) {
             leftButton.setHeight(leftButtonHeight);
             leftButton.setWidth(leftButtonWidth);
         }
@@ -116,7 +123,7 @@ public class AppBarBase extends AppBarLayout {
         rightButton.setBackground(rightButtonBackground);
         rightButton.setText(rightButtonString);
         rightButton.setVisibility(rightButtonVisibility);
-        if(leftButtonHeight!= -1 || leftButtonWidth != -1){
+        if (leftButtonHeight != -1 || leftButtonWidth != -1) {
             rightButton.setHeight(rightButtonHeight);
             rightButton.setWidth(rightButtonWidth);
         }

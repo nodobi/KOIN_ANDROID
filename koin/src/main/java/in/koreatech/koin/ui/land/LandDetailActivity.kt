@@ -1,15 +1,5 @@
 package `in`.koreatech.koin.ui.land
 
-import `in`.koreatech.koin.R
-import `in`.koreatech.koin.constant.LAND
-import `in`.koreatech.koin.core.appbar.AppBarBase
-import `in`.koreatech.koin.databinding.LandActivityDetailBinding
-import `in`.koreatech.koin.domain.model.land.LandDetail
-import `in`.koreatech.koin.ui.land.adapter.LandDetailViewPagerAdapter
-import `in`.koreatech.koin.ui.land.viewmodel.LandDetailViewModel
-import `in`.koreatech.koin.ui.navigation.KoinNavigationDrawerActivity
-import `in`.koreatech.koin.ui.navigation.state.MenuState
-import `in`.koreatech.koin.util.ext.dpToIntPx
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -29,11 +19,22 @@ import com.naver.maps.map.NaverMapOptions
 import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
+import `in`.koreatech.koin.R
+import `in`.koreatech.koin.constant.LAND
+import `in`.koreatech.koin.core.appbar.AppBarBase
+import `in`.koreatech.koin.databinding.LandActivityDetailBinding
+import `in`.koreatech.koin.domain.model.land.LandDetail
+import `in`.koreatech.koin.ui.land.adapter.LandDetailViewPagerAdapter
+import `in`.koreatech.koin.ui.land.viewmodel.LandDetailViewModel
+import `in`.koreatech.koin.ui.navigation.KoinNavigationDrawerActivity
+import `in`.koreatech.koin.ui.navigation.state.MenuState
+import `in`.koreatech.koin.util.ext.dpToIntPx
 
 class LandDetailActivity : KoinNavigationDrawerActivity(), OnMapReadyCallback {
     override val menuState = MenuState.Land
     lateinit var binding: LandActivityDetailBinding
     private val landDetailViewModel by viewModels<LandDetailViewModel>()
+    override val screenTitle = "복덕방 상세"
     private val landDetailViewPagerAdapter = LandDetailViewPagerAdapter(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,52 +88,72 @@ class LandDetailActivity : KoinNavigationDrawerActivity(), OnMapReadyCallback {
 
     private fun setRoomOption(landDetail: LandDetail) {
         with(binding) {
-            if (!landDetail.optAirConditioner) setGray(
-                landDetailAirconditionerImageview,
-                landDetailAirconditionerTextview
-            )
-            if (!landDetail.optRefrigerator) setGray(
-                landDetailRefrigeratorImageview,
-                landDetailRefrigeratorTextview
-            )
+            if (!landDetail.optAirConditioner) {
+                setGray(
+                    landDetailAirconditionerImageview,
+                    landDetailAirconditionerTextview,
+                )
+            }
+            if (!landDetail.optRefrigerator) {
+                setGray(
+                    landDetailRefrigeratorImageview,
+                    landDetailRefrigeratorTextview,
+                )
+            }
             if (!landDetail.optCloset) setGray(landDetailClosetImageview, landDetailClosetTextview)
             if (!landDetail.optTv) setGray(landDetailTvImageview, landDetailTvTextview)
-            if (!landDetail.optElectronicDoorLock) setGray(
-                landDetailDoorlockImageview,
-                landDetailDoorlockTextview
-            )
-            if (!landDetail.optMicrowave) setGray(
-                landDetailMicrowaveImageview,
-                landDetailMicrowaveTextview
-            )
-            if (!landDetail.optGasRange) setGray(
-                landDetailGasRangeImageview,
-                landDetailGasRangeTextview
-            )
-            if (!landDetail.optInduction) setGray(
-                landDetailInductionImageview,
-                landDetailInductionTextview
-            )
-            if (!landDetail.optWaterPurifier) setGray(
-                landDetailWaterPurifierImageview,
-                landDetailWaterPurifierTextview
-            )
+            if (!landDetail.optElectronicDoorLock) {
+                setGray(
+                    landDetailDoorlockImageview,
+                    landDetailDoorlockTextview,
+                )
+            }
+            if (!landDetail.optMicrowave) {
+                setGray(
+                    landDetailMicrowaveImageview,
+                    landDetailMicrowaveTextview,
+                )
+            }
+            if (!landDetail.optGasRange) {
+                setGray(
+                    landDetailGasRangeImageview,
+                    landDetailGasRangeTextview,
+                )
+            }
+            if (!landDetail.optInduction) {
+                setGray(
+                    landDetailInductionImageview,
+                    landDetailInductionTextview,
+                )
+            }
+            if (!landDetail.optWaterPurifier) {
+                setGray(
+                    landDetailWaterPurifierImageview,
+                    landDetailWaterPurifierTextview,
+                )
+            }
             if (!landDetail.optBidet) setGray(landDetailBidetImageview, landDetailBidetTextview)
             if (!landDetail.optWasher) setGray(landDetailWasherImageview, landDetailWasherTextview)
             if (!landDetail.optBed) setGray(landDetailBedImageview, landDetailBedTextview)
             if (!landDetail.optDesk) setGray(landDetailDeskImageview, landDetailDeskTextview)
-            if (!landDetail.optShoeCloset) setGray(
-                landDetailShoeClosetImageview,
-                landDetailShoeClosetTextview
-            )
-            if (!landDetail.optVeranda) setGray(
-                landDetailVerandaImageview,
-                landDetailVerandaTextview
-            )
-            if (!landDetail.optElevator) setGray(
-                landDetailElevatorImageview,
-                landDetailElevatorTextview
-            )
+            if (!landDetail.optShoeCloset) {
+                setGray(
+                    landDetailShoeClosetImageview,
+                    landDetailShoeClosetTextview,
+                )
+            }
+            if (!landDetail.optVeranda) {
+                setGray(
+                    landDetailVerandaImageview,
+                    landDetailVerandaTextview,
+                )
+            }
+            if (!landDetail.optElevator) {
+                setGray(
+                    landDetailElevatorImageview,
+                    landDetailElevatorTextview,
+                )
+            }
         }
     }
 
@@ -157,26 +178,38 @@ class LandDetailActivity : KoinNavigationDrawerActivity(), OnMapReadyCallback {
         with(binding) {
             landDetailNoImageTextview.visibility = View.GONE
             if (landDetail.imageUrls.size > 1) landDetailIcRightImageview.visibility = View.VISIBLE
-            landDetailImageViewpager.registerOnPageChangeCallback(object :
-                ViewPager2.OnPageChangeCallback() {
-                override fun onPageSelected(position: Int) {
-                    super.onPageSelected(position)
-                    with(binding) {
-                        if (position == 0) landDetailIcLeftImageview.visibility = View.INVISIBLE
-                        else landDetailIcLeftImageview.visibility = View.VISIBLE
-                        if (position == landDetail.imageUrls.size - 1) landDetailIcRightImageview.visibility =
-                            View.INVISIBLE
-                        else landDetailIcRightImageview.visibility = View.VISIBLE
+            landDetailImageViewpager.registerOnPageChangeCallback(
+                object :
+                    ViewPager2.OnPageChangeCallback() {
+                    override fun onPageSelected(position: Int) {
+                        super.onPageSelected(position)
+                        with(binding) {
+                            if (position == 0) {
+                                landDetailIcLeftImageview.visibility = View.INVISIBLE
+                            } else {
+                                landDetailIcLeftImageview.visibility = View.VISIBLE
+                            }
+                            if (position == landDetail.imageUrls.size - 1) {
+                                landDetailIcRightImageview.visibility =
+                                    View.INVISIBLE
+                            } else {
+                                landDetailIcRightImageview.visibility = View.VISIBLE
+                            }
+                        }
                     }
-                }
-            })
+                },
+            )
         }
     }
 
-    private fun setGray(landDetailImageview: ImageView, landDetailTextview: TextView) {
-        landDetailImageview.colorFilter = PorterDuffColorFilter(
-            ContextCompat.getColor(this, R.color.gray4), PorterDuff.Mode.SRC_ATOP
-        )
+    private fun setGray(
+        landDetailImageview: ImageView,
+        landDetailTextview: TextView,
+    ) {
+        landDetailImageview.colorFilter =
+            PorterDuffColorFilter(
+                ContextCompat.getColor(this, R.color.gray4), PorterDuff.Mode.SRC_ATOP,
+            )
         landDetailTextview.setTextColor(ContextCompat.getColor(this, R.color.gray4))
     }
 
@@ -186,25 +219,31 @@ class LandDetailActivity : KoinNavigationDrawerActivity(), OnMapReadyCallback {
         if (landId == -1) {
             Toast.makeText(this, R.string.land_detail_unable_id, Toast.LENGTH_SHORT).show()
             finish()
-        } else landDetailViewModel.getLandDetail(landId)
+        } else {
+            landDetailViewModel.getLandDetail(landId)
+        }
     }
 
     private fun naverMapSetting() {
-        val options = NaverMapOptions().camera(
-            CameraPosition(
-                LatLng(
-                    LAND.INITIAL_LATITUDE,
-                    LAND.INITIAL_LONGITUDE
-                ), LAND.INITIAL_ZOOM
+        val options =
+            NaverMapOptions().camera(
+                CameraPosition(
+                    LatLng(
+                        LAND.INITIAL_LATITUDE,
+                        LAND.INITIAL_LONGITUDE,
+                    ),
+                    LAND.INITIAL_ZOOM,
+                ),
             )
-        )
         var mapFragment =
             supportFragmentManager.findFragmentById(R.id.activity_land_detail_navermap) as NaverMapFragment?
         if (mapFragment == null) {
             mapFragment = NaverMapFragment().newInstance(options)
         }
-        supportFragmentManager.beginTransaction()
-            .add(R.id.activity_land_detail_navermap, mapFragment!!).commit()
+        if (!mapFragment!!.isAdded) {
+            supportFragmentManager.beginTransaction()
+                .add(R.id.activity_land_detail_navermap, mapFragment!!).commit()
+        }
         mapFragment.getMapAsync(this)
     }
 
@@ -224,9 +263,9 @@ class LandDetailActivity : KoinNavigationDrawerActivity(), OnMapReadyCallback {
             CameraUpdate.scrollTo(
                 LatLng(
                     landDetail.latitude,
-                    landDetail.longitude
-                )
-            )
+                    landDetail.longitude,
+                ),
+            ),
         )
     }
 }

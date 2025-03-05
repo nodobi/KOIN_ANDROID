@@ -5,11 +5,9 @@ import android.content.Intent
 import android.os.Looper
 import androidx.core.os.HandlerCompat
 import `in`.koreatech.koin.R
-import `in`.koreatech.koin.constant.HttpStatusCode
 import `in`.koreatech.koin.ui.error.ErrorActivity
 import `in`.koreatech.koin.ui.login.LoginActivity
 import `in`.koreatech.koin.util.ext.showToast
-import retrofit2.HttpException
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.io.Writer
@@ -22,24 +20,22 @@ class ExceptionHandlerUtil(private val context: Context) : Thread.UncaughtExcept
      * @param thread
      * @param throwable
      */
-    override fun uncaughtException(thread: Thread, throwable: Throwable) {
+    override fun uncaughtException(
+        thread: Thread,
+        throwable: Throwable,
+    ) {
         val stringWriter = StringWriter()
-        if (throwable is HttpException) {
-            if (throwable.code() == HttpStatusCode.UNAUTHORIZED) {
-                goToLoginActivity()
-            } else {
-                createErrorMessage(throwable, stringWriter)
-            }
-        } else {
-            createErrorMessage(throwable, stringWriter)
-        }
+        createErrorMessage(throwable, stringWriter)
     }
 
-    private fun createErrorMessage(throwable: Throwable, stringWriter: StringWriter) {
-        throwable.printStackTrace(PrintWriter(stringWriter as Writer)) //오류 메시지를 얻는다.
+    private fun createErrorMessage(
+        throwable: Throwable,
+        stringWriter: StringWriter,
+    ) {
+        throwable.printStackTrace(PrintWriter(stringWriter as Writer)) // 오류 메시지를 얻는다.
         val errorMessage = stringWriter.toString()
         startErrorActivity(context, errorMessage)
-        exitProcess(-1) //가장 위에 있는 액티비티를 종료 finish()와 같다.
+        exitProcess(-1) // 가장 위에 있는 액티비티를 종료 finish()와 같다.
     }
 
     /***
@@ -48,7 +44,10 @@ class ExceptionHandlerUtil(private val context: Context) : Thread.UncaughtExcept
      * @param context
      * @param ErrorMessage
      */
-    private fun startErrorActivity(context: Context, ErrorMessage: String) {
+    private fun startErrorActivity(
+        context: Context,
+        ErrorMessage: String,
+    ) {
         val goToErrorActivityIntent = Intent(context.applicationContext, ErrorActivity::class.java)
         goToErrorActivityIntent.putExtra(EXTRA_ERROR_TEXT, ErrorMessage)
         goToErrorActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

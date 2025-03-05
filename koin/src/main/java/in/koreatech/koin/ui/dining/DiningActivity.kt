@@ -1,197 +1,256 @@
 package `in`.koreatech.koin.ui.dining
 
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
+import com.google.android.material.tabs.TabLayoutMediator
+import dagger.hilt.android.AndroidEntryPoint
 import `in`.koreatech.koin.R
+import `in`.koreatech.koin.core.analytics.AnalyticsConstant
+import `in`.koreatech.koin.core.analytics.EventAction
+import `in`.koreatech.koin.core.analytics.EventLogger
 import `in`.koreatech.koin.core.appbar.AppBarBase
-import `in`.koreatech.koin.databinding.DiningActivityMainBinding
+import `in`.koreatech.koin.core.onboarding.OnboardingManager
+import `in`.koreatech.koin.core.onboarding.OnboardingType
+import `in`.koreatech.koin.core.util.dataBinding
+import `in`.koreatech.koin.core.viewpager.addOnPageChangedListener
+import `in`.koreatech.koin.core.viewpager.addOnPageScrollListener
+import `in`.koreatech.koin.databinding.ActivityDiningBinding
 import `in`.koreatech.koin.domain.model.dining.DiningType
 import `in`.koreatech.koin.domain.util.DiningUtil
-import `in`.koreatech.koin.domain.util.ext.toColorForHtml
-import `in`.koreatech.koin.domain.util.ext.toUnderlineForHtml
-import `in`.koreatech.koin.ui.dining.adapter.DiningRecyclerViewAdapter
+import `in`.koreatech.koin.domain.util.TimeUtil
+import `in`.koreatech.koin.ui.dining.adapter.DiningDateAdapter
+import `in`.koreatech.koin.ui.dining.adapter.DiningItemsViewPager2Adapter
 import `in`.koreatech.koin.ui.dining.viewmodel.DiningViewModel
+import `in`.koreatech.koin.ui.main.activity.MainActivity
 import `in`.koreatech.koin.ui.navigation.KoinNavigationDrawerActivity
 import `in`.koreatech.koin.ui.navigation.state.MenuState
-import android.os.Build
-import android.os.Bundle
-import android.text.Html
-import android.view.View
-import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.viewModels
-import androidx.core.content.ContextCompat
-import androidx.databinding.DataBindingUtil
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import dagger.hilt.android.AndroidEntryPoint
+import `in`.koreatech.koin.util.ext.withLoading
+import kotlinx.coroutines.launch
+import java.util.Date
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class DiningActivity : KoinNavigationDrawerActivity(),
-    SwipeRefreshLayout.OnRefreshListener {
+class DiningActivity : KoinNavigationDrawerActivity() {
     override val menuState: MenuState = MenuState.Dining
-    lateinit var binding: DiningActivityMainBinding
-    private val diningViewModel by viewModels<DiningViewModel>()
-    private val diningAdapter = DiningRecyclerViewAdapter(this)
+    val binding: ActivityDiningBinding by dataBinding<ActivityDiningBinding>(R.layout.activity_dining)
+    override val screenTitle = "식단"
+    private val viewModel by viewModels<DiningViewModel>()
+    private val dates = mutableListOf<Date>()
+    private val diningDateAdapter by lazy {
+        DiningDateAdapter {
+            viewModel.setSelectedDate(it)
+        }
+    }
+    private var initialDateTab = 0
+    private var initialDiningTab = 0
+    private val diningOnBoardingBottomSheet by lazy {
+        DiningNotificationOnBoardingFragment()
+    }
+    private val diningPageChangeListener =
+        object : OnPageChangeCallback() {
+            override fun onPageScrollStateChanged(state: Int) {
+                super.onPageScrollStateChanged(state)
+                binding.swipeRefreshLayoutDining.setEnabled(state == ViewPager.SCROLL_STATE_IDLE)
+            }
+        }
+
+    override val onBackPressedCallback: OnBackPressedCallback =
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isTaskRoot) {
+                    val intent = Intent(this@DiningActivity, MainActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        }
+
+    @Inject
+    lateinit var onboardingManager: OnboardingManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.dining_activity_main)
-        init()
-        with(diningViewModel) {
-            updateDiningData()
-            selectedDate.observe(this@DiningActivity) {
-                binding.diningDateTextView.text = it
-            }
-            diningData.observe(this@DiningActivity) {
-                setSwipeRefreshingFalse()
-                updateRecyclerData()
-            }
-            isLoading.observe(this@DiningActivity) {
-                if (it) {
-                    showProgressDialog(R.string.loading)
-                    //NavigationDrawer Refactoring 할 시 변경
-                } else {
-                    hideProgressDialog()
-                    //NavigationDrawer Refactoring 할 시 변경
+        setContentView(binding.root)
+
+        initCalendar()
+        initViewPager()
+        onActionView()
+        selectInitialPositions()
+        initOnRefreshDiningList()
+
+        withLoading(this, viewModel)
+
+        lifecycleScope.launch {
+            viewModel.userState.collect {
+                if (it != null && it.isAnonymous.not()) {
+                    with(onboardingManager) {
+                        showOnboardingIfNeeded(
+                            OnboardingType.DINING_NOTIFICATION,
+                        ) {
+                            diningOnBoardingBottomSheet.show(
+                                supportFragmentManager,
+                                diningOnBoardingBottomSheet.tag,
+                            )
+                        }
+                    }
                 }
             }
-            isDataLoaded.observe(this@DiningActivity) {
-                setSwipeRefreshingFalse()
-                if (!it) {
-                    updateRecyclerData()
-                    Toast.makeText(
-                        this@DiningActivity,
-                        R.string.error_network,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-            isDateError.observe(this@DiningActivity) {
-                if(it) {
-                    Toast.makeText(this@DiningActivity, R.string.dining_no_more_data_load, Toast.LENGTH_SHORT).show()
-                    dateErrorInit()
-                }
-            }
-            when (selectedType) {
-                is DiningType.Breakfast -> setTextSelected(binding.diningBreakfastButton)
-                is DiningType.Lunch -> setTextSelected(binding.diningLunchButton)
-                is DiningType.Dinner -> setTextSelected(binding.diningDinnerButton)
-            }
-        }
-
-
-    }
-
-    private fun init() {
-        with(binding.diningRecyclerview) {
-            adapter = diningAdapter
-            layoutManager = LinearLayoutManager(this@DiningActivity)
-            setHasFixedSize(true)
-            isNestedScrollingEnabled = false
-        }
-
-        binding.diningSwiperefreshlayout.setOnRefreshListener(this)
-
-        binding.diningBreakfastButton.setOnClickListener {
-            diningViewModel.selectedType = DiningType.Breakfast
-            updateRecyclerData()
-            setTextSelected(it as TextView)
-            with(binding.diningLunchButton) {
-                text = getString(R.string.dining_lunch)
-            }
-            with(binding.diningDinnerButton) {
-                text = getString(R.string.dining_dinner)
-            }
-        }
-
-        binding.diningLunchButton.setOnClickListener {
-            diningViewModel.selectedType = DiningType.Lunch
-            updateRecyclerData()
-            setTextSelected(it as TextView)
-            with(binding.diningBreakfastButton) {
-                text = getString(R.string.dining_breakfast)
-            }
-            with(binding.diningDinnerButton) {
-                text = getString(R.string.dining_dinner)
-            }
-        }
-
-        binding.diningDinnerButton.setOnClickListener {
-            diningViewModel.selectedType = DiningType.Dinner
-            updateRecyclerData()
-            setTextSelected(it as TextView)
-            with(binding.diningBreakfastButton) {
-                text = getString(R.string.dining_breakfast)
-            }
-            with(binding.diningLunchButton) {
-                text = getString(R.string.dining_lunch)
-            }
-        }
-
-        binding.diningBeforeDateButton.setOnClickListener {
-            onPreviousDay()
-        }
-
-        binding.diningNextDateButton.setOnClickListener {
-            onNextDay()
         }
 
         binding.koinBaseAppBarDark.setOnClickListener {
             when (it.id) {
-                AppBarBase.getLeftButtonId() -> callDrawerItem(R.id.navi_item_home)
-                AppBarBase.getRightButtonId() -> toggleNavigationDrawer()
-            }
-        }
-    }
-
-    override fun onRefresh() {
-        diningViewModel.updateDiningData()
-    }
-
-    private fun onPreviousDay() {
-        diningViewModel.getPreviousDayDiningData()
-    }
-
-    private fun onNextDay() {
-        diningViewModel.getNextDayDiningData()
-    }
-
-    private fun updateRecyclerData() {
-        with(diningViewModel.diningData.value) {
-            if ((this == null) || isEmpty()) {
-                diningAdapter.setData(listOf())
-                binding.diningViewEmpty.emptyDiningListFrameLayout.visibility = View.VISIBLE
-            } else {
-                with(DiningUtil.typeFiltering(this, diningViewModel.selectedType)) {
-                    if (isEmpty()) {
-                        binding.diningViewEmpty.emptyDiningListFrameLayout.visibility = View.VISIBLE
-                    } else {
-                        binding.diningViewEmpty.emptyDiningListFrameLayout.visibility = View.GONE
-                    }
-                    diningAdapter.setData(this)
+                AppBarBase.getLeftButtonId() -> onBackPressedDispatcher.onBackPressed()
+                AppBarBase.getRightButtonId() -> {
+                    EventLogger.logClickEvent(
+                        EventAction.CAMPUS,
+                        AnalyticsConstant.Label.CAFETERIA_INFO,
+                        getString(R.string.cafeteria_info),
+                    )
+                    startActivity(Intent(this@DiningActivity, DiningNoticeActivity::class.java))
                 }
             }
         }
     }
 
-    private fun setTextSelected(view: TextView) {
-        val color = "#" + Integer.toHexString(
-            ContextCompat.getColor(this, R.color.colorAccent))
+    private fun selectInitialPositions() {
+        binding.tabsDiningTime.selectTab(binding.tabsDiningTime.getTabAt(initialDiningTab))
+        diningDateAdapter.selectPosition(initialDateTab)
+        diningDateAdapter.notifyDataSetChanged()
+        viewModel.setSelectedDate(dates[initialDateTab])
+    }
 
-        view.text = if (Build.VERSION_CODES.N > Build.VERSION.SDK_INT) {
-            Html.fromHtml(view.text.toString().toColorForHtml(color)
-                .toUnderlineForHtml())
-        } else {
-            Html.fromHtml(
-                view.text.toString().toColorForHtml(color)
-                    .toUnderlineForHtml(),
-                Html.FROM_HTML_MODE_LEGACY
-            )
+    private fun onActionView() {
+        if (Intent.ACTION_VIEW == intent.action) {
+            val uri = intent.data
+            uri?.let {
+                try {
+                    val dateString = it.getQueryParameter("date")
+                    dateString?.let { ds ->
+                        val date = TimeUtil.stringToDateYYYYMMDD(ds)
+                        val diff = TimeUtil.getDateDifferenceInDays(date, dates[dates.size / 2])
+                        initialDateTab = dates.size / 2 + diff
+                    }
+
+                    it.getQueryParameter("type")?.let { type ->
+                        initialDiningTab = getDiningTabByType(DiningUtil.getTypeByString(type))
+                    }
+
+                    // 카카오톡 공유를 통해 앱으로 들어온 경우 호출
+                    dateString?.let {
+                        EventLogger.logClickEvent(
+                            EventAction.CAMPUS,
+                            AnalyticsConstant.Label.MENU_SHARE,
+                            "코인으로 이동",
+                        )
+                    }
+                } catch (_: Exception) {
+                }
+            }
         }
     }
 
-    private fun setSwipeRefreshingFalse() {
-        with(binding.diningSwiperefreshlayout) {
-            if (isRefreshing) isRefreshing = false
+    private fun initViewPager() {
+        with(binding) {
+            diningViewPager.apply {
+                offscreenPageLimit = 3
+                adapter = DiningItemsViewPager2Adapter(this@DiningActivity)
+                addOnPageScrollListener(this@DiningActivity) {
+                    EventLogger.logScrollEvent(
+                        EventAction.CAMPUS,
+                        AnalyticsConstant.Label.MENU_TIME,
+                        tabsDiningTime.getTabAt(it)?.text.toString(),
+                    )
+                }
+                addOnPageChangedListener(this@DiningActivity, diningPageChangeListener)
+            }
+            TabLayoutMediator(tabsDiningTime, diningViewPager) { tab, position ->
+                tab.text =
+                    when (position) {
+                        0 -> getString(R.string.dining_breakfast)
+                        1 -> getString(R.string.dining_lunch)
+                        2 -> getString(R.string.dining_dinner)
+                        else -> throw IllegalArgumentException("Position must be lower than ${diningViewPager.offscreenPageLimit}")
+                    }
+            }.attach()
+
+            initialDiningTab = getDiningTabByType(DiningUtil.getCurrentType())
+
+            // 스크롤이 아닌 탭 선택 이벤트만 받기 위한 구현
+            repeat(binding.tabsDiningTime.tabCount) {
+                val tab = binding.tabsDiningTime.getTabAt(it)
+                tab?.view?.setOnClickListener {
+                    EventLogger.logClickEvent(
+                        EventAction.CAMPUS,
+                        AnalyticsConstant.Label.MENU_TIME,
+                        tab.text.toString(),
+                    )
+                }
+            }
         }
+    }
+
+    private fun initCalendar() {
+        with(binding) {
+            recyclerViewCalendar.adapter = diningDateAdapter
+            dates.clear()
+            val current = TimeUtil.getCurrentTime()
+            dates.add(current)
+            repeat(3) {
+                dates.add(0, TimeUtil.getPreviousDayDate(dates.first()))
+            }
+            repeat(3) {
+                dates.add(TimeUtil.getNextDayDate(dates.last()))
+            }
+            diningDateAdapter.submitList(dates)
+
+            val todayPos = dates.size / 2
+            scrollDateTodayToCenter(todayPos)
+            initialDateTab = todayPos
+        }
+    }
+
+    private fun scrollDateTodayToCenter(todayPosition: Int) {
+        val layoutManager = binding.recyclerViewCalendar.layoutManager as? LinearLayoutManager
+        val screenWidthPx = resources.displayMetrics.widthPixels
+        binding.recyclerViewCalendar.post {
+            val itemWidthPx = binding.recyclerViewCalendar.getChildAt(0).width
+            val offset = (screenWidthPx / 2 - itemWidthPx / 2)
+            layoutManager?.scrollToPositionWithOffset(todayPosition, offset)
+        }
+    }
+
+    private fun getDiningTabByType(type: DiningType): Int {
+        return when (type) {
+            DiningType.Breakfast -> 0
+            DiningType.Lunch -> 1
+            DiningType.Dinner -> 2
+            DiningType.NextBreakfast -> 0
+        }
+    }
+
+    private fun initOnRefreshDiningList() {
+        binding.swipeRefreshLayoutDining.setOnRefreshListener {
+            viewModel.getDining(viewModel.selectedDate.value)
+            binding.swipeRefreshLayoutDining.isRefreshing = false
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        intent.apply {
+            this?.action = Intent.ACTION_VIEW
+            setIntent(this)
+        }
+        super.onNewIntent(intent)
+        onActionView()
+        selectInitialPositions()
     }
 }

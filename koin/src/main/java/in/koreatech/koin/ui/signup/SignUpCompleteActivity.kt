@@ -9,8 +9,8 @@ import `in`.koreatech.koin.databinding.ActivitySignupCompleteBinding
 import `in`.koreatech.koin.ui.login.LoginActivity
 
 class SignUpCompleteActivity : ActivityBase() {
-
     private lateinit var binding: ActivitySignupCompleteBinding
+    override val screenTitle = "회원가입 완료"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,20 +20,16 @@ class SignUpCompleteActivity : ActivityBase() {
         initView()
     }
 
-    override fun onBackPressed() {
-        //super.onBackPressed()
-    }
+    private fun initView() =
+        with(binding) {
+            btnGoLogin.setOnClickListener {
+                finishAffinity()
+                startActivity(Intent(this@SignUpCompleteActivity, LoginActivity::class.java))
+            }
 
-    private fun initView() = with(binding){
-        goToLoginButton.setOnClickListener{
-            finishAffinity()
-            startActivity(Intent(this@SignUpCompleteActivity, LoginActivity::class.java))
+            btnGoCollegePortal.setOnClickListener {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.koreatech_url)))
+                startActivity(intent)
+            }
         }
-
-        goToShcoolHomePageButton.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.koreatech_url)))
-            startActivity(intent)
-        }
-    }
-
 }

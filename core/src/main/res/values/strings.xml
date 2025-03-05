@@ -6,32 +6,62 @@
     <string name="error_network">네트워크 환경을 확인해주세요</string>
 
     <!--common-->
+    <string name="phone_number">휴대폰 번호</string>
+    <string name="common_need_permission">권한이 필요합니다.</string>
+    <string name="common_confirmation">확인</string>
+    <string name="common_confirm">확인하기</string>
+    <string name="common_negative">아니오</string>
+    <string name="common_cancellation">취소</string>
+    <string name="common_do_cancellation">취소하기</string>
+    <string name="register">등록하기</string>
+    <string name="common_complete">완료</string>
+    <string name="common_edit">편집</string>
+    <string name="common_save">저장</string>
     <string name="need_permission">권한이 필요합니다.</string>
+    <string name="back">뒤로가기</string>
     <string name="positive">확인</string>
     <string name="negative">아니오</string>
-    <string name="neutral">취소</string>
+    <string name="cancel">취소</string>
+    <string name="next">다음</string>
+    <string name="page_one">1 / 4</string>
+    <string name="page_two">2 / 4</string>
+    <string name="page_three">3 / 4</string>
+    <string name="page_four">4 / 4</string>
+    <string name="category">카테고리</string>
+    <string name="calling_number">전화번호</string>
+    <string name="delivery_fee">배달금액</string>
+    <string name="operating_time">운영시간</string>
+    <string name="other_info">기타정보</string>
+    <string name="delivery_available">배달가능</string>
+    <string name="card_available">카드가능</string>
+    <string name="account_transfer_avilable">계좌이체가능</string>
+    <string name="revise">수정</string>
+    <string name="day_of_week">요일</string>
+    <string name="open_time">시간</string>
+    <string name="day_off">휴무</string>
+    <string name="store_open_time">개점 시간</string>
+    <string name="store_close_time">폐점 시간</string>
+    <string name="go_to_main_screen">메인 화면 바로가기</string>
+    <string name="add_price">가격 추가</string>
+    <string name="temp_price">TempPrice</string>
+    <string name="temp_uri">TempUri</string>
+    <string name="won">원</string>
+    <string name="close">닫기</string>
+    <string name="my_shop">내 상점</string>
+    <string name="image">사진</string>
+    <string name="title">제목</string>
+    <string name="start_date">시작일</string>
+    <string name="end_date">종료일</string>
+    <string name="text_should_inputted">필수 입력 항목입니다.</string>
+    <string name="delete">삭제</string>
+    <string name="register_image">사진 등록하기</string>
+    <string name="image_limit" formatted="true">이미지는 %d개까지만 등록 가능해요.</string>
 
-    <!--left drawer menu -->
+    <!-- drawer menu -->
     <string name="home">홈</string>
 
-    <!--학교 정보-->
-    <string name="navigation_item_store">상점</string>
-    <string name="navigation_item_bus">버스/교통</string>
-    <string name="navigation_item_dining">식단</string>
-    <string name="navigation_item_circle">동아리</string>
-    <!--<string name="navigation_item_faq">FAQ</string>-->
-
-    <!--커뮤니티-->
-    <string name="navigation_item_free_board">자유게시판</string>
-    <string name="navigation_item_anonymous_board">익명게시판</string>
-    <string name="navigation_item_recruit_board">취업게시판</string>
-
-    <!--부가서비스-->
-    <string name="navigation_item_callvan_sharing">콜밴쉐어링</string>
-    <!--<string name="navigation_item_real_estate">복덕방</string>-->
-    <string name="navigation_item_usedmarket">중고장터</string>
-    <string name="navigation_item_timetable">시간표</string>
-    <string name="navigation_item_search">검색</string>
+    <string name="navigation_hello_message">님, 안녕하세요!</string>
+    <string name="navigation_hello_message_anonymous">로그인 후 더 많은 기능을 사용하세요.</string>
 
     <!--right drawer menu-->
     <string name="navigation_item_user_info">회원 정보</string>
@@ -41,9 +71,24 @@
     <string name="navigation_item_kakao_talk">카카오톡 대화</string>
     <string name="navigation_item_version_info">버전 정보</string>
     <string name="navigation_item_developer">만든 이</string>
-    <string name="navigation_item_open_source">오픈소스</string>
-    <string name="navigation_item_login">로그인</string>
+    <string name="navigation_item_open_source">오픈소스 라이선스</string>
+    <string name="navigation_item_my_info">내 정보</string>
     <string name="navigation_item_logout">로그아웃</string>
+    <string name="navigation_item_login">로그인</string>
+
+    <string name="navigation_item_store">주변 상점</string>
+    <string name="navigation_item_bus">버스 / 교통</string>
+    <string name="navigation_item_bus_timetable">버스 시간표</string>
+    <string name="navigation_item_bus_search">교통편 조회하기</string>
+    <string name="navigation_item_dining">식단</string>
+    <string name="navigation_item_land">복덕방</string>
+    <string name="navigation_item_timetable">시간표</string>
+    <string name="navigation_item_search">검색</string>
+    <string name="navigation_item_owner">코인 사장님</string>
+    <string name="navigation_item_article">게시판</string>
+    <string name="navigation_item_ask_bcsd">문의하기</string>
+    <string name="navigation_item_koreatech_operating_information">교내 시설물 정보</string>
+    <!--End left drawer menu -->
 
 
     <!-- Server Messages -->
@@ -52,9 +97,11 @@
     <string name="version_check_success">최신 버전을 사용하고 있습니다.</string>
     <string name="version_check_failed">버전 정보를 불러오지 못하였습니다. 네트워크 연결을 확인해주세요.</string>
     <string name="token_out_dated">인증 정보가 만료되었습니다. 다시 로그인해 주세요.</string>
+
     <!-- URL -->
     <string name="koreatech_email">\u0040 koreatech.ac.kr</string>
     <string name="koreatech_url">https://portal.koreatech.ac.kr/</string>
+    <string name="koreatech_stems_url">https://job.koreatech.ac.kr/</string>
     <string name="koreatech_email_url">https://email.koreatech.ac.kr/</string>
 
     <string name="user_lock_bottom_sheet_behavior">in.koreatech.koin.core.helpers.UserLockBottomSheetBehavior</string>
@@ -69,11 +116,144 @@
     </string-array>
 
     <string name="file_path_base">/Pictures/koin/</string>
-    <string name="file_path_timetable">/Pictures/koin/timetable</string>
 
     <string name="fail_upload">업로드에 실패하였습니다.</string>
     <string name="uploading_image_now">이미지 업로드 중입니다.</string>
-    <string name="navigation_drawer_right_button_ask">문의하기</string>
-    <string name="navigation_drawer_right_hello_message">님, 안녕하세요!</string>
-    <string name="navigation_drawer_right_myinfo">내 정보</string>
+    <string name="hamburger">햄버거</string>
+
+    <!--비지니스-->
+    <!--기타-->
+    <string name="copy_right">Copyright @ BCSD Lab All rights reserved.</string>
+    <string name="sign_up">회원가입</string>
+    <string name="master_sign_up">사장님용\n회원가입</string>
+    <string name="go_login_activity">로그인 화면 바로가기</string>
+    <string name="back_arrow">backArrow</string>
+    <string name="error">오류가 발생하였습니다. 잠시뒤에 다시 시도해 주세요</string>
+    <string name="for_business">For Business</string>
+    <string name="login_required_field_not_filled">아이디와 비밀번호를 입력해주세요</string>
+    <string name="phone_number_is_null">전화번호를 입력해주세요.</string>
+
+
+    <!--인증번호 관련-->
+    <string name="auth_code_input_from_email">이메일로 발송된 인증번호 6자리를 입력해 주세요.</string>
+    <string name="auth_code_not_equal">인증번호가 일치하지 않습니다.</string>
+    <string name="auth_code_insert">인증번호를 입력해주세요</string>
+    <string name="auth_code_send">인증번호발송</string>
+    <string name="auth_code_resend">재발송</string>
+    <string name="auth_code_input">인증번호 입력</string>
+
+    <!--이메일 및 아이디 관련-->
+    <string name="id">아이디</string>
+    <string name="email_input">이메일 입력</string>
+    <string name="email_certification">이메일 인증하기</string>
+    <string name="email_address_insert">이메일 주소를 입력해주세요</string>
+    <string name="email_address_incorrect">이메일 주소가 올바르지 않습니다.</string>
+
+    <!--패스워드 관련-->
+    <string name="password">비밀번호</string>
+    <string name="password_condition">* 특수문자 포함 영어와 숫자 조합 6~18 자리</string>
+    <string name="password_input">비밀번호를 입력해 주세요.</string>
+    <string name="password_confirm_input">확인 비밀번호를 입력해 주세요.</string>
+    <string name="password_not_coincide">비밀번호가 일치하지 않습니다.</string>
+    <string name="password_please_sign_in_with_new_password">비밀번호가 변경되었습니다.\n새로운 비밀번호로 로그인 부탁드립니다.</string>
+    <string name="password_change_complete">비밀번호 변경 완료</string>
+    <string name="password_confirm">비밀번호 확인</string>
+    <string name="password_new">새 비밀번호</string>
+    <string name="password_changing">비밀번호 변경하기</string>
+    <string name="password_find">비밀번호 찾기</string>
+    <string name="password_change">비밀번호 변경</string>
+    <string name="password_mismatch" >비밀번호가 일치하지 않습니다.</string>
+    <string name="password_is_null">비밀번호를 입력해주세요.</string>
+
+    <!-- 가게 등록 -->
+    <string name="insert_store">가게 등록</string>
+    <string name="insert_store_info">가게 정보 기입</string>
+    <string name="insert_store_guide">가게의 다양한 정보를 입력 및 수정하여\n학생들에게 최신 가게 정보를 알려주세요.</string>
+    <string name="insert_store_start">가게 정보 기입하기</string>
+    <string name="insert_store_main_info">등록 하시려는 업체의\n메인 정보를 입력해 주세요.</string>
+    <string name="insert_store_category_setting">1. 가게 카테고리 설정</string>
+    <string name="insert_store_choose_category">카테고리를 골라주세요.</string>
+
+    <string name="insert_store_basic_info">2. 기본 정보 입력</string>
+    <string name="insert_store_store_name">가게이름</string>
+    <string name="insert_store_store_address">주소정보</string>
+    <string name="insert_store_null_store_name">가게 이름을 입력해 주세요.</string>
+    <string name="insert_store_null_store_address">주소 정보를 입력해 주세요.</string>
+    <string name="insert_store_null_store_image">가게 사진을 등록해 주세요.</string>
+    <string name="insert_store_fail_upload_store_image">이미지를 등록하는데 실패하였습니다.</string>
+
+    <string name="insert_store_detail_info">3. 세부 정보 입력</string>
+    <string name="insert_store_detail">등록 하시려는 업체의\n세부 정보를 입력해 주세요.</string>
+    <string name="insert_store_time_setting">시간설정</string>
+    <string name="insert_store_open_time_setting">평일/주말 운영시간</string>
+    <string name="insert_store_operating_time">%1$s: %2$s ~ %3$s</string>
+    <string name="insert_store_closed_day">매주 %1$s 정기 휴무</string>
+    <string name="insert_store_null_store_phone_number">가게 전화번호를 입력해 주세요.</string>
+    <string name="insert_store_null_store_delivery_fee">가게 배달비를 입력해 주세요.</string>
+    <string name="insert_store_null_store_other_info">가게 기타 정보를 입력해 주세요.</string>
+
+    <string name="add_setting_time">설정시간 추가</string>
+    <string name="add_setting_time_plus">설정시간 플러스 버튼</string>
+    <string name="insert_store_operating_time_setting">운영시간 설정</string>
+    <string name="setting_time_is_null">등록한 운영시간이 없습니다.</string>
+
+    <string name="insert_store_check_store_info">4. 가게 정보 확인</string>
+    <string name="insert_store_check_info">입력하신 정보가 맞습니까?</string>
+    <string name="insert_store_fail_register_store">가게를 등록하는데 실패하였습니다.</string>
+
+    <string name="insert_store_finish">가게 등록 완료</string>
+    <string name="insert_store_finish_guide">가게 등록이 완료되었습니다.\n업체 정보 수정은 내 상점에서 가능합니다.</string>
+
+    <string name="recommend_login_to_like_dining">더 맛있는 학식을 먹는 방법,\n로그인하고 좋아요를 남겨주세요!</string>
+    <string name="recommend_like_dining">여러분의 좋아요가 영양사님이 더 나은\n식단을 제공할 수 있도록 도와줍니다.</string>
+    <string name="action_login">로그인하기</string>
+
+
+    <!-- 메뉴 등록 -->
+    <string name="menu_add">메뉴 추가</string>
+    <string name="menu_modify">메뉴 수정</string>
+    <string name="menu_info">메뉴 정보</string>
+    <string name="menu_name">메뉴명</string>
+    <string name="menu_price">가격</string>
+    <string name="menu_category">메뉴 카테고리</string>
+    <string name="menu_detail">메뉴 세부</string>
+    <string name="menu_composition">메뉴구성</string>
+    <string name="menu_description_example">예) 불족발(소,중,대) + 막국수 + 랜덤 서비스 음료 (500ml)</string>
+    <string name="menu_image">메뉴 사진</string>
+    <string name="menu_image_maximum">(최대 이미지 3장)</string>
+    <string name="menu_image_add">이미지 추가</string>
+    <string name="menu_image_can_input">메뉴 사진을 추가할 수 있습니다.</string>
+    <string name="menu_change">변 경</string>
+    <string name="menu_price_won">%1$s원</string>
+    <string name="menu_price_many_won">%1$s / %2$s원</string>
+    <string name="menu_serving_example">예) 소 (1~2인분)</string>
+    <string name="menu_null_name">메뉴 이름을 입력해 주세요.</string>
+    <string name="menu_null_price">메뉴 가격을 입력해 주세요.</string>
+    <string name="menu_null_category">메뉴 카테고리를 선택해 주세요.</string>
+    <string name="menu_null_description">메뉴 설명을 작성해 주세요.</string>
+    <string name="menu_null_image">메뉴 사진을 등록해 주세요.</string>
+    <string name="menu_fail_upload_image">메뉴 사진 업로드 실패</string>
+    <string name="menu_fail_register_menu">메뉴 등록 실패</string>
+    <string name="menu_success_register_menu">메뉴가 정상적으로 등록되었습니다.</string>
+    <string name="menu_fail_modify_menu">메뉴 수정 실패</string>
+    <string name="menu_success_modify_menu">메뉴가 정상적으로 수정되었습니다.</string>
+
+    <!-- 이벤트 로깅 -->
+    <string name="event_set_notification">알림설정</string>
+    <string name="event_write">이벤트/공지 작성하기</string>
+    <string name="event_upload_image_instruction">이벤트/공지와 관련된 사진을 올려보세요.</string>
+    <string name="event_input_title_instruction">이벤트/공지 제목을 입력해주세요.</string>
+    <string name="event_content">이벤트/공지 내용</string>
+    <string name="event_input_content_instruction">이벤트/공지 내용을 입력해주세요.</string>
+    <string name="event_period">이벤트/공지 등록 기간</string>
+
+    <!-- force update -->
+    <string name="force_update_do_update">업데이트하기</string>
+    <string name="force_update_already_update">이미 업데이트를 하셨나요?</string>
+    <string name="force_update_already_update_u"><u>이미 업데이트를 하셨나요?</u></string>
+    <string name="force_update_dialog_content">업데이트 이후에도 이 화면이 나타나는\n경우에는 스토어에서 코인을\n삭제 후 재설치 해 주세요.</string>
+    <string name="force_update_go_store">스토어로 가기</string>
+
+    <!-- etc -->
+    <string name="copyright_2024">Copyright 2024. BCSD Lab. All rights reserved.</string>
 </resources>

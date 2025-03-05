@@ -2,7 +2,12 @@ package `in`.koreatech.koin.constant
 
 const val GOTO_KOREATECH_PORTAL_SNACK_BAR_TIME = 5000
 
-//Dining
+object URL {
+    const val BCSD_ASK_FORM = "https://forms.gle/hE4VMchTZuff5rLB7"
+    const val KOIN_ASK_FORM = "https://forms.gle/Yo1WNR5mLQdi1pMh6"
+}
+
+// Dining
 object DINING {
     const val WIDGET_ACTION_CLICKED = "dining_place"
     const val WIDGET_ACTION_REFRESH_CLICKED = "REFRESH Clicked"
@@ -11,7 +16,7 @@ object DINING {
     const val WIDGET_PLACE_NUMBERS = 4
 }
 
-//Land
+// Land
 object LAND {
     const val INITIAL_LATITUDE = 36.763695
     const val INITIAL_LONGITUDE = 127.281796
